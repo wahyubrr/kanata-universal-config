@@ -1,0 +1,244 @@
+;; ============================================================================
+;; Graphite Universal v3 - Kanata
+;; Target: Kanata 1.12.x
+;; Platforms: Windows + macOS
+;; Keyboard: US-ANSI / OS input source should remain US QWERTY
+;;
+;; REQUIRED ENVIRONMENT VARIABLE
+;;   Windows: KANATA_PLATFORM=windows
+;;   macOS:   KANATA_PLATFORM=macos
+;;   Linux:   KANATA_PLATFORM=linux
+;;
+;; LAYOUT SWITCHING (physical QWERTY positions)
+;;   Tap Caps Lock -> Caps Lock
+;;   Hold Caps + Q -> QWERTY
+;;   Hold Caps + G -> Graphite
+;;
+;; Default startup layer: Graphite
+;;
+;; WINDOWS LEFT-MODIFIER BEHAVIOR
+;;   Physical Left Ctrl -> Left Meta / Windows
+;;   Physical Left Win  -> Left Alt
+;;   Physical Left Alt  -> "Command-like" key
+;;
+;; The Command-like Left Alt:
+;;   - stays as REAL Alt for Tab, so hold Alt + tap Tab repeatedly works
+;;   - for letter/number shortcuts, temporarily suppresses only Left Alt
+;;     and sends Ctrl+key
+;;     e.g. physical Alt+C -> Ctrl+C, Alt+V -> Ctrl+V
+;;   - after the shortcut, Left Alt is restored while you continue holding it
+;;
+;; v3 deliberately uses:
+;;   - NO virtual/fake held modifier
+;;   - NO on-release virtual-key cleanup
+;;   - NO persistent synthetic Alt state
+;;
+;; This avoids the stuck-modifier failure mode seen in v2.
+;;
+;; macOS modifier behavior remains native:
+;;   Control -> Control
+;;   Option  -> Option
+;;   Command -> Command
+;;
+;; Right-side modifiers remain native on both platforms.
+;; ============================================================================
+
+(defcfg
+  process-unmapped-keys yes
+)
+
+(defsrc
+  grv  1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab  q    w    e    r    t    y    u    i    o    p    [    ]    \
+  caps a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft z    x    c    v    b    n    m    ,    .    /    rsft
+  lctl lmet lalt           spc            ralt rmet rctl
+)
+
+;; ----------------------------------------------------------------------------
+;; Common aliases
+;; ----------------------------------------------------------------------------
+
+(defalias
+  ;; Tap Caps normally; hold it to expose the layout selector.
+  cap (tap-hold-press 200 200 caps (layer-while-held select))
+
+  ;; Official Graphite punctuation whose Shift output differs from normal
+  ;; US-QWERTY behavior.
+  gy  (fork '   S-min (lsft rsft))  ;; ' -> _
+  gap (fork ,   S-/   (lsft rsft))  ;; , -> ?
+  gdt (fork min S-'   (lsft rsft))  ;; - -> "
+  gsl (fork /   S-,   (lsft rsft))  ;; / -> <
+)
+
+;; ----------------------------------------------------------------------------
+;; Windows "Command-like" shortcuts
+;;
+;; Physical Left Alt remains held as real Alt.
+;; `unmod (lalt)` temporarily removes ONLY Left Alt while sending Ctrl+key,
+;; then restores Left Alt automatically afterward.
+;;
+;; This preserves:
+;;   Alt+Tab, Alt+Tab+Tab+Tab...
+;;   Alt+C -> Ctrl+C
+;;   Alt+V -> Ctrl+V
+;;   Alt+Shift+C -> Ctrl+Shift+C
+;; ----------------------------------------------------------------------------
+
+(defalias
+  wc-a (unmod (lalt) lctl a)
+  wc-b (unmod (lalt) lctl b)
+  wc-c (unmod (lalt) lctl c)
+  wc-d (unmod (lalt) lctl d)
+  wc-e (unmod (lalt) lctl e)
+  wc-f (unmod (lalt) lctl f)
+  wc-g (unmod (lalt) lctl g)
+  wc-h (unmod (lalt) lctl h)
+  wc-i (unmod (lalt) lctl i)
+  wc-j (unmod (lalt) lctl j)
+  wc-k (unmod (lalt) lctl k)
+  wc-l (unmod (lalt) lctl l)
+  wc-m (unmod (lalt) lctl m)
+  wc-n (unmod (lalt) lctl n)
+  wc-o (unmod (lalt) lctl o)
+  wc-p (unmod (lalt) lctl p)
+  wc-q (unmod (lalt) lctl q)
+  wc-r (unmod (lalt) lctl r)
+  wc-s (unmod (lalt) lctl s)
+  wc-t (unmod (lalt) lctl t)
+  wc-u (unmod (lalt) lctl u)
+  wc-v (unmod (lalt) lctl v)
+  wc-w (unmod (lalt) lctl w)
+  wc-x (unmod (lalt) lctl x)
+  wc-y (unmod (lalt) lctl y)
+  wc-z (unmod (lalt) lctl z)
+
+  wc-1 (unmod (lalt) lctl 1)
+  wc-2 (unmod (lalt) lctl 2)
+  wc-3 (unmod (lalt) lctl 3)
+  wc-4 (unmod (lalt) lctl 4)
+  wc-5 (unmod (lalt) lctl 5)
+  wc-6 (unmod (lalt) lctl 6)
+  wc-7 (unmod (lalt) lctl 7)
+  wc-8 (unmod (lalt) lctl 8)
+  wc-9 (unmod (lalt) lctl 9)
+  wc-0 (unmod (lalt) lctl 0)
+
+  ;; Windows physical Left Alt:
+  ;; simultaneously hold REAL Left Alt and expose a layout-aware shortcut layer.
+  w-gcmd (multi lalt (layer-while-held win-graphite-command))
+  w-qcmd (multi lalt (layer-while-held win-qwerty-command))
+)
+
+;; ----------------------------------------------------------------------------
+;; Platform-specific aliases
+;;
+;; KANATA_PLATFORM must be set before Kanata starts.
+;; ----------------------------------------------------------------------------
+
+(defaliasenvcond (KANATA_PLATFORM windows)
+  pctl lmet
+  pmet lalt
+  galt @w-gcmd
+  qalt @w-qcmd
+)
+
+(defaliasenvcond (KANATA_PLATFORM macos)
+  pctl lctl
+  pmet lmet
+  galt lalt
+  qalt lalt
+)
+
+(defaliasenvcond (KANATA_PLATFORM linux)
+  pctl lctl
+  pmet lmet
+  galt lalt
+  qalt lalt
+)
+
+;; ----------------------------------------------------------------------------
+;; GRAPHITE
+;;
+;; Unshifted:
+;;   ` 1 2 3 4 5   6 7 8 9 0 [ ]
+;;     b l d w z   ' f o u j ; = \
+;;     n r t s g   y h a e i ,
+;;     q x m c v   k p . - /
+;;
+;; Shifted punctuation:
+;;   ' -> _
+;;   ; -> :
+;;   = -> +
+;;   \ -> |
+;;   , -> ?
+;;   . -> >
+;;   - -> "
+;;   / -> <
+;; ----------------------------------------------------------------------------
+
+(deflayer graphite
+  grv   1    2    3    4    5    6    7    8    9    0    [    ]    bspc
+  tab   b    l    d    w    z    @gy  f    o    u    j    ;    =    \
+  @cap  n    r    t    s    g    y    h    a    e    i    @gap ret
+  lsft  q    x    m    c    v    k    p    .    @gdt @gsl rsft
+  @pctl @pmet @galt           spc            ralt rmet rctl
+)
+
+;; ----------------------------------------------------------------------------
+;; QWERTY
+;; ----------------------------------------------------------------------------
+
+(deflayer qwerty
+  grv   1    2    3    4    5    6    7    8    9    0    -    =    bspc
+  tab   q    w    e    r    t    y    u    i    o    p    [    ]    \
+  @cap  a    s    d    f    g    h    j    k    l    ;    '    ret
+  lsft  z    x    c    v    b    n    m    ,    .    /    rsft
+  @pctl @pmet @qalt           spc            ralt rmet rctl
+)
+
+;; ----------------------------------------------------------------------------
+;; Caps-held layout selector
+;; Q/G refer to PHYSICAL QWERTY positions.
+;; ----------------------------------------------------------------------------
+
+(deflayer select
+  _    _                     _    _    _    _                       _    _    _    _    _    _    _    _
+  _    (layer-switch qwerty) _    _    _    _                       _    _    _    _    _    _    _    _
+  _    _                     _    _    _    (layer-switch graphite) _    _    _    _    _    _    _
+  _    _                     _    _    _    _                       _    _    _    _    _    _
+  _    _                     _              _                            _    _    _
+)
+
+;; ----------------------------------------------------------------------------
+;; WINDOWS COMMAND-LIKE LAYERS
+;;
+;; Tab is TRANSPARENT on purpose.
+;; While physical Left Alt is held, real Left Alt is already down, so:
+;;
+;;   hold physical Alt + Tab + Tab + Tab
+;;
+;; is native Windows Alt+Tab cycling.
+;;
+;; Letters/numbers are mapped according to the ACTIVE typing layout:
+;;   Graphite key that types C -> Ctrl+C
+;;   QWERTY key that types C   -> Ctrl+C
+;;
+;; All other keys remain transparent and retain ordinary Alt behavior.
+;; ----------------------------------------------------------------------------
+
+(deflayer win-graphite-command
+  _     @wc-1 @wc-2 @wc-3 @wc-4 @wc-5 @wc-6 @wc-7 @wc-8 @wc-9 @wc-0 _     _     _
+  _     @wc-b @wc-l @wc-d @wc-w @wc-z _     @wc-f @wc-o @wc-u @wc-j _     _     _
+  _     @wc-n @wc-r @wc-t @wc-s @wc-g @wc-y @wc-h @wc-a @wc-e @wc-i _     _
+  _     @wc-q @wc-x @wc-m @wc-c @wc-v @wc-k @wc-p _     _     _     _
+  _     _     _                 _                 _     _     _
+)
+
+(deflayer win-qwerty-command
+  _     @wc-1 @wc-2 @wc-3 @wc-4 @wc-5 @wc-6 @wc-7 @wc-8 @wc-9 @wc-0 _     _     _
+  _     @wc-q @wc-w @wc-e @wc-r @wc-t @wc-y @wc-u @wc-i @wc-o @wc-p _     _     _
+  _     @wc-a @wc-s @wc-d @wc-f @wc-g @wc-h @wc-j @wc-k @wc-l _     _     _
+  _     @wc-z @wc-x @wc-c @wc-v @wc-b @wc-n @wc-m _     _     _     _
+  _     _     _                 _                 _     _     _
+)
