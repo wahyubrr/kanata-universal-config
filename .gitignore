@@ -1,4 +1,5 @@
 *.exe
 *.zip
 *.dll
+*.py
 kanata.kbd

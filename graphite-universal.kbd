@@ -18,22 +18,11 @@
 ;;
 ;; WINDOWS LEFT-MODIFIER BEHAVIOR
 ;;   Physical Left Ctrl -> Left Meta / Windows
-;;   Physical Left Win  -> Left Alt
+;;   Physical Left Win  -> "Option-like" key
 ;;   Physical Left Alt  -> "Command-like" key
 ;;
-;; The Command-like Left Alt:
-;;   - stays as REAL Alt for Tab, so hold Alt + tap Tab repeatedly works
-;;   - for letter/number shortcuts, temporarily suppresses only Left Alt
-;;     and sends Ctrl+key
-;;     e.g. physical Alt+C -> Ctrl+C, Alt+V -> Ctrl+V
-;;   - after the shortcut, Left Alt is restored while you continue holding it
-;;
-;; v3 deliberately uses:
-;;   - NO virtual/fake held modifier
-;;   - NO on-release virtual-key cleanup
-;;   - NO persistent synthetic Alt state
-;;
-;; This avoids the stuck-modifier failure mode seen in v2.
+;; Command and Option are layer-only while editing, preventing Alt menu focus.
+;; Tab activates real Alt only for task switching; modifier release clears it.
 ;;
 ;; macOS modifier behavior remains native:
 ;;   Control -> Control
@@ -75,72 +64,71 @@
 ;; ----------------------------------------------------------------------------
 ;; Windows "Command-like" shortcuts
 ;;
-;; Physical Left Alt remains held as real Alt.
-;; `unmod (lalt)` temporarily removes ONLY Left Alt while sending Ctrl+key,
-;; then restores Left Alt automatically afterward.
-;;
-;; This preserves:
-;;   Alt+Tab, Alt+Tab+Tab+Tab...
-;;   Alt+C -> Ctrl+C
-;;   Alt+V -> Ctrl+V
-;;   Alt+Shift+C -> Ctrl+Shift+C
+;; Editing shortcuts emit Ctrl/navigation keys directly, with no Alt restoration.
 ;; ----------------------------------------------------------------------------
 
-(defalias
-  wc-a (unmod (lalt) lctl a)
-  wc-b (unmod (lalt) lctl b)
-  wc-c (unmod (lalt) lctl c)
-  wc-d (unmod (lalt) lctl d)
-  wc-e (unmod (lalt) lctl e)
-  wc-f (unmod (lalt) lctl f)
-  wc-g (unmod (lalt) lctl g)
-  wc-h (unmod (lalt) lctl h)
-  wc-i (unmod (lalt) lctl i)
-  wc-j (unmod (lalt) lctl j)
-  wc-k (unmod (lalt) lctl k)
-  wc-l (unmod (lalt) lctl l)
-  wc-m (unmod (lalt) lctl m)
-  wc-n (unmod (lalt) lctl n)
-  wc-o (unmod (lalt) lctl o)
-  wc-p (unmod (lalt) lctl p)
-  wc-q (unmod (lalt) lctl q)
-  wc-r (unmod (lalt) lctl r)
-  wc-s (unmod (lalt) lctl s)
-  wc-t (unmod (lalt) lctl t)
-  wc-u (unmod (lalt) lctl u)
-  wc-v (unmod (lalt) lctl v)
-  wc-w (unmod (lalt) lctl w)
-  wc-x (unmod (lalt) lctl x)
-  wc-y (unmod (lalt) lctl y)
-  wc-z (unmod (lalt) lctl z)
+(defvirtualkeys task-alt lalt)
 
-  wc-1 (unmod (lalt) lctl 1)
-  wc-2 (unmod (lalt) lctl 2)
-  wc-3 (unmod (lalt) lctl 3)
-  wc-4 (unmod (lalt) lctl 4)
-  wc-5 (unmod (lalt) lctl 5)
-  wc-6 (unmod (lalt) lctl 6)
-  wc-7 (unmod (lalt) lctl 7)
-  wc-8 (unmod (lalt) lctl 8)
-  wc-9 (unmod (lalt) lctl 9)
-  wc-0 (unmod (lalt) lctl 0)
+(defalias
+  ;; Virtual-key presses take a processing tick; delay Tab until Alt is down.
+  w-tab (multi (on-press press-virtualkey task-alt) (macro 1 tab))
+  wc-a C-a
+  wc-b C-b
+  wc-c C-c
+  wc-d C-d
+  wc-e C-e
+  wc-f C-f
+  wc-g C-g
+  wc-h C-h
+  wc-i C-i
+  wc-j C-j
+  wc-k C-k
+  wc-l C-l
+  wc-m C-m
+  wc-n C-n
+  wc-o C-o
+  wc-p C-p
+  wc-q C-q
+  wc-r C-r
+  wc-s C-s
+  wc-t C-t
+  wc-u C-u
+  wc-v C-v
+  wc-w C-w
+  wc-x C-x
+  wc-y C-y
+  wc-z C-z
+
+  wc-1 C-1
+  wc-2 C-2
+  wc-3 C-3
+  wc-4 C-4
+  wc-5 C-5
+  wc-6 C-6
+  wc-7 C-7
+  wc-8 C-8
+  wc-9 C-9
+  wc-0 C-0
 
   ;; Command navigation: line edges and document edges; Shift selects text.
-  wc-left (unmod (lalt) home)
-  wc-right (unmod (lalt) end)
-  wc-up (unmod (lalt) lctl home)
-  wc-down (unmod (lalt) lctl end)
+  wc-left home
+  wc-right end
+  wc-up C-home
+  wc-down C-end
+  ;; Select back to the line start, then delete the selection in sequence.
+  wc-bspc (macro (unmod (lsft rsft) lsft home)
+                 (unmod (lsft rsft) bspc))
   ;; Option navigation: words and paragraphs; Shift selects text.
-  wo-left (unmod (lalt) lctl left)
-  wo-right (unmod (lalt) lctl rght)
-  wo-up (unmod (lalt) lctl up)
-  wo-down (unmod (lalt) lctl down)
-  w-opt (multi lalt (layer-while-held win-option))
+  wo-left C-left
+  wo-right C-rght
+  wo-up C-up
+  wo-down C-down
+  wo-bspc C-bspc
+  w-opt (multi (layer-while-held win-option) (on-release release-virtualkey task-alt))
 
-  ;; Windows physical Left Alt:
-  ;; simultaneously hold REAL Left Alt and expose a layout-aware shortcut layer.
-  w-gcmd (multi lalt (layer-while-held win-graphite-command))
-  w-qcmd (multi lalt (layer-while-held win-qwerty-command))
+  ;; Release task-switch Alt when the physical modifier is released.
+  w-gcmd (multi (layer-while-held win-graphite-command) (on-release release-virtualkey task-alt))
+  w-qcmd (multi (layer-while-held win-qwerty-command) (on-release release-virtualkey task-alt))
 )
 
 ;; ----------------------------------------------------------------------------
@@ -229,23 +217,17 @@
 ;; ----------------------------------------------------------------------------
 ;; WINDOWS COMMAND-LIKE LAYERS
 ;;
-;; Tab is TRANSPARENT on purpose.
-;; While physical Left Alt is held, real Left Alt is already down, so:
-;;
-;;   hold physical Alt + Tab + Tab + Tab
-;;
-;; is native Windows Alt+Tab cycling.
-;;
+;; Tab holds task-switch Alt until the physical modifier is released.
 ;; Letters/numbers are mapped according to the ACTIVE typing layout:
 ;;   Graphite key that types C -> Ctrl+C
 ;;   QWERTY key that types C   -> Ctrl+C
 ;;
-;; Arrows emulate macOS Command navigation; other keys retain Alt behavior.
+;; Arrows and Backspace emulate macOS editing; other keys are transparent.
 ;; ----------------------------------------------------------------------------
 
 (deflayer win-graphite-command
-  _     @wc-1 @wc-2 @wc-3 @wc-4 @wc-5 @wc-6 @wc-7 @wc-8 @wc-9 @wc-0 _     _     _
-  _     @wc-b @wc-l @wc-d @wc-w @wc-z _     @wc-f @wc-o @wc-u @wc-j _     _     _
+  _     @wc-1 @wc-2 @wc-3 @wc-4 @wc-5 @wc-6 @wc-7 @wc-8 @wc-9 @wc-0 _     _     @wc-bspc
+  @w-tab @wc-b @wc-l @wc-d @wc-w @wc-z _     @wc-f @wc-o @wc-u @wc-j _     _     _
   _     @wc-n @wc-r @wc-t @wc-s @wc-g @wc-y @wc-h @wc-a @wc-e @wc-i _     _
   _     @wc-q @wc-x @wc-m @wc-c @wc-v @wc-k @wc-p _     _     _     _
   _     _     _                 _                 _     _     _
@@ -253,18 +235,18 @@
 )
 
 (deflayer win-qwerty-command
-  _     @wc-1 @wc-2 @wc-3 @wc-4 @wc-5 @wc-6 @wc-7 @wc-8 @wc-9 @wc-0 _     _     _
-  _     @wc-q @wc-w @wc-e @wc-r @wc-t @wc-y @wc-u @wc-i @wc-o @wc-p _     _     _
+  _     @wc-1 @wc-2 @wc-3 @wc-4 @wc-5 @wc-6 @wc-7 @wc-8 @wc-9 @wc-0 _     _     @wc-bspc
+  @w-tab @wc-q @wc-w @wc-e @wc-r @wc-t @wc-y @wc-u @wc-i @wc-o @wc-p _     _     _
   _     @wc-a @wc-s @wc-d @wc-f @wc-g @wc-h @wc-j @wc-k @wc-l _     _     _
   _     @wc-z @wc-x @wc-c @wc-v @wc-b @wc-n @wc-m _     _     _     _
   _     _     _                 _                 _     _     _
   @wc-left @wc-right @wc-up @wc-down
 )
 
-;; Physical Left Win acts as Option; ordinary Alt behavior except for arrows.
+;; Physical Left Win acts as Option; only Tab activates real Alt.
 (deflayer win-option
-  _ _ _ _ _ _ _ _ _ _ _ _ _ _
-  _ _ _ _ _ _ _ _ _ _ _ _ _ _
+  _ _ _ _ _ _ _ _ _ _ _ _ _ @wo-bspc
+  @w-tab _ _ _ _ _ _ _ _ _ _ _ _ _
   _ _ _ _ _ _ _ _ _ _ _ _ _
   _ _ _ _ _ _ _ _ _ _ _ _
   _ _ _       _       _ _ _

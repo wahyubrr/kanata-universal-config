@@ -122,6 +122,19 @@ Add either Shift key to select text while moving. These mappings apply globally;
 the focused application determines the exact navigation behavior. macOS keeps
 native Option/Command navigation. Right-side modifiers and Linux remain native.
 
+Windows Backspace editing also works in both layouts:
+
+- Physical Left Win (Option) + Backspace sends Ctrl+Backspace to delete the previous word.
+- Physical Left Alt (Command) + Backspace sends Shift+Home, then Backspace to delete to the line start.
+
+These shortcuts depend on the focused application's text editing behavior.
+
+Windows Command/Option activate shortcut layers without holding Alt, so editing
+shortcuts do not restore Alt and activate the menu bar on modifier release.
+Hold either left emulated modifier and tap Tab to cycle windows; Alt is activated
+for task switching and released when the modifier is released. Unmapped keys
+on these layers type normally. Use Right Alt for native Alt shortcuts.
+
 The installers use the executable and config directly from the directory you
 are in when running the installer. They only create the OS startup/service
 entries (and Linux's uinput module configuration). Keep the directory in place
