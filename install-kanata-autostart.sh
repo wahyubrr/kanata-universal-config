@@ -47,6 +47,9 @@ unit_escape() {
 
 if [ "$platform" = macos ]; then
     install -d -m 755 /Library/LaunchDaemons
+    touch /var/log/kanata.log
+    chmod 644 /var/log/kanata.log
+    chown root:wheel /var/log/kanata.log
     binary_xml=$(xml_escape "$binary")
     config_xml=$(xml_escape "$config")
     directory_xml=$(xml_escape "$source_dir")
@@ -60,18 +63,29 @@ if [ "$platform" = macos ]; then
     <string>--cfg</string><string>$config_xml</string>
     <string>--no-wait</string>
   </array>
+  <key>UserName</key><string>root</string>
   <key>EnvironmentVariables</key><dict>
     <key>KANATA_PLATFORM</key><string>macos</string>
   </dict>
   <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><dict>
+    <key>SuccessfulExit</key><false/>
+  </dict>
   <key>WorkingDirectory</key><string>$directory_xml</string>
+  <key>StandardOutPath</key><string>/var/log/kanata.log</string>
+  <key>StandardErrorPath</key><string>/var/log/kanata.log</string>
 </dict></plist>
 PLIST
     chmod 644 /Library/LaunchDaemons/local.kanata.autostart.plist
     chown root:wheel /Library/LaunchDaemons/local.kanata.autostart.plist
     plutil -lint /Library/LaunchDaemons/local.kanata.autostart.plist
-    echo 'Installed a root LaunchDaemon for all users. Reboot to start.'
-    echo 'Kanata still requires its macOS keyboard driver and privacy permissions.'
+    "$binary" --macos-request-permissions >/dev/null 2>&1 || true
+    launchctl bootout system/local.kanata.autostart >/dev/null 2>&1 || true
+    launchctl bootstrap system /Library/LaunchDaemons/local.kanata.autostart.plist
+    launchctl kickstart -k system/local.kanata.autostart
+    echo 'Installed and started a root LaunchDaemon for all users.'
+    echo 'Logs: /var/log/kanata.log'
+    echo 'Kanata still requires its macOS keyboard driver and Input Monitoring/Accessibility permissions.'
 else
     install -d -m 755 /etc/systemd/system /etc/modules-load.d
     printf '%s\n' uinput > /etc/modules-load.d/kanata.conf

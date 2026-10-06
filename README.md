@@ -44,8 +44,14 @@ and a corresponding filename change in the installer.
 
 ## macOS
 
-1. Download macos-binaries-arm64.zip for Apple Silicon or
-   macos-binaries-x64.zip for Intel from the official release Assets.
+1. Download the macOS binary ZIP for your CPU:
+
+   Apple Silicon:
+   https://github.com/jtroo/kanata/releases/download/v1.12.0/macos-binaries-arm64.zip
+
+   Intel:
+   https://github.com/jtroo/kanata/releases/download/v1.12.0/macos-binaries-x64.zip
+
    Double-click the ZIP in Finder, or extract it in Terminal:
 
    unzip "$HOME/Downloads/macos-binaries-arm64.zip" -d "$HOME/Downloads/kanata-extracted"
@@ -56,26 +62,41 @@ and a corresponding filename change in the installer.
 2. Install the required Karabiner VirtualHIDDevice driver. Kanata v1.12.0 uses
    driver v6.2.0; newer Kanata versions may require a different driver:
    https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice/releases/tag/v6.2.0
-   Run the package installer, approve its system extension, and ensure its
-   VirtualHIDDevice daemon starts at boot. Follow the upstream instructions
-   for activation and the standalone driver's daemon setup:
+   Run the package installer, then open System Settings > General > Login Items
+   & Extensions > Driver Extensions and enable
+   org.pqrs.Karabiner-DriverKit-VirtualHIDDevice. A reboot may be required
+   after activating the driver.
+3. Ensure the VirtualHIDDevice daemon runs at boot. If Karabiner-Elements is
+   installed, it normally manages the daemon. If you installed only the
+   standalone driver, follow the upstream standalone daemon setup:
    https://github.com/jtroo/kanata/blob/main/docs/setup-macos.md
-3. In Terminal, change to the folder containing the three custom files and run:
+   You can check for the daemon with:
+
+   sudo launchctl list | grep org.pqrs
+
+4. In Terminal, change to the folder containing the three custom files and run:
 
    chmod +x ./kanata-native
    sudo sh ./install-kanata-autostart.sh ./kanata-native
 
-4. Give the native Kanata executable in your current directory Input Monitoring and Accessibility access
-   in System Settings > Privacy & Security. Use Command+Shift+G in the file
-   picker to reach this path.
-5. Reboot after the driver and permissions are ready.
+5. Give the native Kanata executable in your current directory Input Monitoring
+   and Accessibility access in System Settings > Privacy & Security. The
+   installer asks macOS to show/register the Accessibility permission prompt
+   when supported. Use Command+Shift+G in the file picker to reach this path.
+6. After granting privacy permissions, restart Kanata:
+
+   sudo launchctl kickstart -k system/local.kanata.autostart
+
+   Reboot instead if you just activated the driver.
 
 The installer sets KANATA_PLATFORM=macos and creates
 /Library/LaunchDaemons/local.kanata.autostart.plist. Kanata runs as root at boot
 and serves users across logins. It does not create a separate instance per user.
-Check its state with:
+The installer starts or restarts the LaunchDaemon immediately; after reboot it
+starts automatically. Check its state and logs with:
 
    sudo launchctl print system/local.kanata.autostart
+   tail -f /var/log/kanata.log
 
 ## Linux (systemd)
 
@@ -165,6 +186,7 @@ To disable automatic startup:
             using administrator permission, and quit the running tray application.
    macOS:   sudo launchctl bootout system/local.kanata.autostart
             sudo rm /Library/LaunchDaemons/local.kanata.autostart.plist
+            sudo rm /var/log/kanata.log
    Linux:   sudo systemctl disable --now kanata.service
 
 These steps disable Kanata startup; they leave the installed executable/config.
