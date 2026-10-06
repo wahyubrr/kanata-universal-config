@@ -129,6 +129,16 @@ Windows Backspace editing also works in both layouts:
 
 These shortcuts depend on the focused application's text editing behavior.
 
+Windows screenshot shortcuts (physical Left Alt acts as Command):
+
+- Command+Shift+3: Win+Print Screen, save a full-screen screenshot.
+- Command+Shift+4: Win+Shift+S, open area screenshot selection.
+- Command+Shift+5: Win+Shift+R, open recording selection on supported Windows 11 Snipping Tool versions.
+
+Either Shift key works. Unshifted Command+3/4/5 still sends Ctrl+3/4/5.
+Command+Shift+5 opens recording controls rather than macOS's combined toolbar.
+Official Windows capture guide: https://support.microsoft.com/en-us/windows/apps/use-snipping-tool-to-capture-screenshots
+
 Windows Command/Option activate shortcut layers without holding Alt, so editing
 shortcuts do not restore Alt and activate the menu bar on modifier release.
 Hold either left emulated modifier and tap Tab to cycle windows; Alt is activated

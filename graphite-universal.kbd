@@ -101,9 +101,14 @@
 
   wc-1 C-1
   wc-2 C-2
-  wc-3 C-3
-  wc-4 C-4
-  wc-5 C-5
+  ;; Normalize either physical Shift to the exact Windows capture shortcut.
+  ;; Release Print Screen before Windows, with Shift suppressed throughout.
+  w-shot3 (multi (unmod (lsft rsft) nop0) (macro M-(prnt)))
+  w-shot4 (unmod (lsft rsft) lmet lsft s)
+  w-shot5 (unmod (lsft rsft) lmet lsft r)
+  wc-3 (fork C-3 @w-shot3 (lsft rsft))
+  wc-4 (fork C-4 @w-shot4 (lsft rsft))
+  wc-5 (fork C-5 @w-shot5 (lsft rsft))
   wc-6 C-6
   wc-7 C-7
   wc-8 C-8
