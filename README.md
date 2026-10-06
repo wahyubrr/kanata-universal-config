@@ -110,6 +110,17 @@ Graphite is the startup layout. Hold physical Caps Lock and press physical Q
 to select QWERTY, or physical G to select Graphite. Tap Caps Lock for Caps Lock.
 Hold physical Left Ctrl + Space + Escape together for Kanata's emergency exit.
 
+Windows text navigation works in both Graphite and QWERTY:
+
+| Physical modifier | Left / Right | Up / Down |
+| --- | --- | --- |
+| Left Win (Option) | Ctrl+Left / Ctrl+Right: words | Ctrl+Up / Ctrl+Down: paragraphs |
+| Left Alt (Command) | Home / End: line edges | Ctrl+Home / Ctrl+End: document edges |
+
+Add either Shift key to select text while moving. These mappings apply globally;
+the focused application determines the exact navigation behavior. macOS keeps
+native Option/Command navigation. Right-side modifiers and Linux remain native.
+
 The installers copy the config; editing the source copy does not update the
 installed copy. Rerun the installer as administrator/root after editing it.
 On Windows, quit Kanata before replacing the executable, then sign in again.
