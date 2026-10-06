@@ -6,18 +6,13 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
     throw 'Run this installer from PowerShell as administrator.'
 }
 
-$installDirectory = Join-Path $env:ProgramData 'Kanata'
+$installDirectory = (Get-Location).ProviderPath
 $startupDirectory = [Environment]::GetFolderPath('CommonStartup')
 $files = @('kanata_windows_gui_winIOv2_x64.exe', 'graphite-universal.kbd')
 foreach ($file in $files) {
-    if (-not (Test-Path -LiteralPath (Join-Path $PSScriptRoot $file) -PathType Leaf)) {
+    if (-not (Test-Path -LiteralPath (Join-Path $installDirectory $file) -PathType Leaf)) {
         throw "Missing source file: $file"
     }
-}
-
-New-Item -ItemType Directory -Path $installDirectory -Force | Out-Null
-foreach ($file in $files) {
-    Copy-Item -LiteralPath (Join-Path $PSScriptRoot $file) -Destination (Join-Path $installDirectory $file) -Force
 }
 
 $escapedDirectory = $installDirectory.Replace('"', '""')
@@ -29,6 +24,6 @@ shell.Run """$escapedDirectory\kanata_windows_gui_winIOv2_x64.exe"" --cfg ""$esc
 "@
 $launcherPath = Join-Path $startupDirectory 'Kanata.vbs'
 Set-Content -LiteralPath $launcherPath -Value $launcher -Encoding Unicode
-Write-Host "Installed Kanata in $installDirectory"
+Write-Host "Kanata will run directly from $installDirectory"
 Write-Host "All-users login launcher: $launcherPath"
 Write-Host 'Kanata will start in each user session at the next login.'

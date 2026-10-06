@@ -28,8 +28,9 @@ Keep your operating system's keyboard input layout set to US QWERTY.
 
 5. Sign out and sign back in. Kanata starts at each user's login.
 
-The installer copies the executable and config to C:\ProgramData\Kanata and
+The installer uses the executable and config in your current directory and
 adds Kanata.vbs to the all-users Startup folder. It sets KANATA_PLATFORM=windows.
+All users must have read/execute access to this directory.
 Windows Script Host must be enabled for the VBS launcher to run.
 
 For a manual test from the source folder, run:
@@ -64,7 +65,7 @@ and a corresponding filename change in the installer.
    chmod +x ./kanata-native
    sudo sh ./install-kanata-autostart.sh ./kanata-native
 
-4. Give /usr/local/lib/kanata/kanata Input Monitoring and Accessibility access
+4. Give the native Kanata executable in your current directory Input Monitoring and Accessibility access
    in System Settings > Privacy & Security. Use Command+Shift+G in the file
    picker to reach this path.
 5. Reboot after the driver and permissions are ready.
@@ -121,8 +122,11 @@ Add either Shift key to select text while moving. These mappings apply globally;
 the focused application determines the exact navigation behavior. macOS keeps
 native Option/Command navigation. Right-side modifiers and Linux remain native.
 
-The installers copy the config; editing the source copy does not update the
-installed copy. Rerun the installer as administrator/root after editing it.
+The installers use the executable and config directly from the directory you
+are in when running the installer. They only create the OS startup/service
+entries (and Linux's uinput module configuration). Keep the directory in place
+and available at login/boot. If you move it, rerun the installer from its new
+location. Edit graphite-universal.kbd here, then restart Kanata to apply changes.
 On Windows, quit Kanata before replacing the executable, then sign in again.
 On macOS/Linux, restart after updating the installed files:
 
