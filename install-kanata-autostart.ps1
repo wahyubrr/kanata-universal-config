@@ -1,8 +1,10 @@
+param([switch]$CheckOnly)
+
 $ErrorActionPreference = 'Stop'
 
 $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
 $principal = [Security.Principal.WindowsPrincipal]::new($identity)
-if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+if (-not $CheckOnly -and -not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw 'Run this installer from PowerShell as administrator.'
 }
 
@@ -23,6 +25,10 @@ shell.CurrentDirectory = "$escapedDirectory"
 shell.Run """$escapedDirectory\kanata_windows_gui_winIOv2_x64.exe"" --cfg ""$escapedDirectory\graphite-universal.kbd""", 0, False
 "@
 $launcherPath = Join-Path $startupDirectory 'Kanata.vbs'
+if ($CheckOnly) {
+    Write-Output $launcher
+    return
+}
 Set-Content -LiteralPath $launcherPath -Value $launcher -Encoding Unicode
 Write-Host "Kanata will run directly from $installDirectory"
 Write-Host "All-users login launcher: $launcherPath"
